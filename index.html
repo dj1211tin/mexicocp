@@ -22,7 +22,7 @@
 
     .container {
       width: 95%;
-      max-width: 700px;
+      max-width: 720px;
       background: white;
       padding: 30px;
       border-radius: 16px;
@@ -57,7 +57,7 @@
     }
 
     button {
-      padding: 14px 22px;
+      padding: 14px 28px;
       border: none;
       border-radius: 10px;
       background: #111827;
@@ -68,15 +68,16 @@
     }
 
     button:hover {
-      opacity: 0.9;
+      background: #1f2937;
     }
 
     .result {
       margin-top: 25px;
-      padding: 20px;
+      padding: 24px;
       border-radius: 14px;
       display: none;
-      line-height: 1.8;
+      line-height: 1.85;
+      font-size: 15.5px;
     }
 
     .normal {
@@ -103,6 +104,12 @@
       color: #374151;
     }
 
+    .result h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+
     .table {
       margin-top: 35px;
     }
@@ -114,7 +121,7 @@
     }
 
     th, td {
-      padding: 10px;
+      padding: 11px;
       border-bottom: 1px solid #e5e7eb;
       text-align: left;
       font-size: 14px;
@@ -138,7 +145,7 @@
     }
 
     .footer {
-      margin-top: 25px;
+      margin-top: 30px;
       color: #6b7280;
       font-size: 13px;
       line-height: 1.6;
@@ -151,8 +158,8 @@
     <h1>墨西哥邮编偏远区查询系统</h1>
 
     <div class="desc">
-      海外仓 / 一件代发 / 墨西哥尾程专用<br>
-      输入5位墨西哥邮编（CP）查询是否属于正常区、偏远区或 Ocurre 自提区域。
+      佰腾海外仓 / 一件代发 / 墨西哥尾程专用<br>
+      输入5位墨西哥邮编（CP）查询州、城市、正常区、偏远区或 Ocurre 自提区域
     </div>
 
     <div class="search-box">
@@ -164,7 +171,6 @@
 
     <div class="table">
       <h3>系统逻辑说明</h3>
-
       <table>
         <thead>
           <tr>
@@ -177,31 +183,33 @@
           <tr>
             <td>正常地区</td>
             <td>核心城市 / 主城区</td>
-            <td>正常报价</td>
+            <td>正常报价，无偏远费</td>
           </tr>
           <tr>
             <td>偏远地区</td>
             <td>山区 / 农村 / 低频派送</td>
-            <td>加收偏远费</td>
+            <td>加收偏远费（120~300 MXN）</td>
           </tr>
           <tr>
             <td>Ocurre 自提</td>
             <td>仅支持门店自提</td>
-            <td>客户自提</td>
+            <td>客户需前往网点自提</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <div class="footer">
-      ※ 当前为佰腾墨西哥海外仓基础规则演示版。<br>
-      ※ 可后续接入完整全国 CP 数据库 / Excel / API。<br>
-      ※ 建议后续增加 FedEx / Estafeta / Castores 独立判断逻辑。
+      ※ 当前为演示版，基于主流物流公司（DHL/Estafeta/FedEx）经验规则<br>
+      ※ 建议实际发货前仍以物流商官方查询为准<br>
+      ※ 可后续接入完整全国 CP 数据库
     </div>
   </div>
 
   <script>
+    // 州信息
     const mexicoStates = [
+      { state: 'CDMX', start: 1000, end: 16999, type: 'normal' },
       { state: 'Aguascalientes', start: 20000, end: 20999, type: 'normal' },
       { state: 'Baja California', start: 21000, end: 22999, type: 'normal' },
       { state: 'Baja California Sur', start: 23000, end: 23999, type: 'remote' },
@@ -232,131 +240,141 @@
       { state: 'Tlaxcala', start: 90000, end: 90999, type: 'normal' },
       { state: 'Veracruz', start: 91000, end: 96999, type: 'mixed' },
       { state: 'Yucatán', start: 97000, end: 97999, type: 'normal' },
-      { state: 'Zacatecas', start: 98000, end: 99999, type: 'remote' },
-      { state: 'CDMX', start: 1000, end: 16999, type: 'normal' }
+      { state: 'Zacatecas', start: 98000, end: 99999, type: 'remote' }
     ];
 
-    const normalRules = [
-      { start: 1000, end: 16999, city: 'CDMX' },
+    // 核心城市精准匹配
+    const cityRules = [
+      { start: 1000, end: 16999, city: 'Ciudad de México' },
       { start: 44100, end: 45599, city: 'Guadalajara' },
       { start: 64000, end: 67999, city: 'Monterrey' },
       { start: 72000, end: 75999, city: 'Puebla' },
       { start: 76000, end: 76999, city: 'Querétaro' },
       { start: 97000, end: 97999, city: 'Mérida' },
-      { start: 77500, end: 77569, city: 'Cancún' }
+      { start: 77500, end: 77569, city: 'Cancún' },
+      { start: 25000, end: 25999, city: 'Saltillo' },
+      { start: 36000, end: 37999, city: 'León' }
     ];
 
+    // 偏远规则
     const remoteRules = [
-      { start: 29500, end: 30999, state: 'Chiapas' },
-      { start: 68000, end: 71999, state: 'Oaxaca' },
-      { start: 39000, end: 41999, state: 'Guerrero' },
-      { start: 83000, end: 84999, state: 'Sonora' },
-      { start: 33000, end: 35999, state: 'Chihuahua / Durango' },
-      { start: 24000, end: 24999, state: 'Campeche' },
-      { start: 77800, end: 77999, state: 'Quintana Roo Rural' }
+      { start: 29500, end: 30999, note: 'Chiapas 高风险' },
+      { start: 68000, end: 71999, note: 'Oaxaca' },
+      { start: 39000, end: 41999, note: 'Guerrero' },
+      { start: 83000, end: 84999, note: 'Sonora 偏远' },
+      { start: 33000, end: 35999, note: 'Chihuahua / Durango' },
+      { start: 24000, end: 24999, note: 'Campeche' },
+      { start: 77800, end: 77999, note: 'Quintana Roo 乡村' }
     ];
 
+    // Ocurre 自提规则
     const ocurreRules = [
-      { start: 70900, end: 70999, state: 'Oaxaca Rural' },
-      { start: 29650, end: 29699, state: 'Chiapas Sierra' },
-      { start: 40900, end: 40999, state: 'Guerrero Sierra' }
+      { start: 70900, end: 70999, note: 'Oaxaca Rural' },
+      { start: 29650, end: 29699, note: 'Chiapas Sierra' },
+      { start: 40900, end: 40999, note: 'Guerrero Sierra' }
     ];
 
     function checkCP() {
       const cp = document.getElementById('cpInput').value.trim();
-      const result = document.getElementById('result');
+      const resultDiv = document.getElementById('result');
 
-      result.style.display = 'block';
+      resultDiv.style.display = 'block';
 
       if (!/^\d{5}$/.test(cp)) {
-        result.className = 'result unknown';
-        result.innerHTML = `
-          <strong>请输入有效的5位墨西哥邮编（CP）</strong>
-        `;
+        resultDiv.className = 'result unknown';
+        resultDiv.innerHTML = `<strong>❌ 请输入有效的5位墨西哥邮编（CP）</strong>`;
         return;
       }
 
       const cpNum = parseInt(cp);
 
+      // 1. Ocurre 自提优先判断
       for (const rule of ocurreRules) {
         if (cpNum >= rule.start && cpNum <= rule.end) {
-          result.className = 'result ocurre';
-          result.innerHTML = `
-            <h2>⚠ Ocurre 自提区域</h2>
+          resultDiv.className = 'result ocurre';
+          resultDiv.innerHTML = `
+            <h2>⚠️ Ocurre 自提区域</h2>
             <strong>邮编：</strong> ${cp}<br>
-            <strong>地区：</strong> ${rule.state}<br>
-            <strong>派送类型：</strong> 仅支持门店自提（Ocurre）<br>
-            <strong>建议：</strong> 提前通知客户自提，并预收偏远费用。
+            <strong>州：</strong> ${getState(cpNum)}<br>
+            <strong>城市/区域：</strong> ${rule.note}<br>
+            <strong>派送类型：</strong> <span style="color:#ef4444">仅支持门店自提</span><br>
+            <strong>建议：</strong> 客户必须前往当地网点自提，建议预收偏远/自提费用。
           `;
           return;
         }
       }
 
+      // 2. 偏远区域判断
       for (const rule of remoteRules) {
         if (cpNum >= rule.start && cpNum <= rule.end) {
-          result.className = 'result remote';
-          result.innerHTML = `
-            <h2>⚠ 偏远地区</h2>
+          resultDiv.className = 'result remote';
+          resultDiv.innerHTML = `
+            <h2>⚠️ 偏远地区</h2>
             <strong>邮编：</strong> ${cp}<br>
-            <strong>区域：</strong> ${rule.state}<br>
+            <strong>州：</strong> ${getState(cpNum)}<br>
+            <strong>城市/区域：</strong> ${getCity(cpNum)}<br>
             <strong>类型：</strong> Zona Extendida / Rural<br>
-            <strong>建议：</strong> 建议加收偏远费（120~250 MXN）。
+            <strong>建议：</strong> 加收偏远费（约120~300 MXN），时效较慢。
           `;
           return;
         }
       }
 
+      // 3. 邮编后三位 > 800 自动判定为偏远
       const lastThree = cpNum % 1000;
-
       if (lastThree > 800) {
-        result.className = 'result remote';
-        result.innerHTML = `
-          <h2>⚠ 偏远地区</h2>
+        resultDiv.className = 'result remote';
+        resultDiv.innerHTML = `
+          <h2>⚠️ 偏远地区</h2>
           <strong>邮编：</strong> ${cp}<br>
-          <strong>判定规则：</strong> 邮编后三位大于 800<br>
+          <strong>州：</strong> ${getState(cpNum)}<br>
+          <strong>城市/区域：</strong> ${getCity(cpNum)}<br>
+          <strong>判定依据：</strong> 邮编后三位 > 800<br>
           <strong>类型：</strong> 高概率偏远区域<br>
-          <strong>建议：</strong> 建议加收偏远费，并提前确认是否支持到门派送。
+          <strong>建议：</strong> 加收偏远费，建议提前确认派送方式。
         `;
         return;
       }
 
-      for (const rule of normalRules) {
+      // 4. 核心城市优先
+      for (const rule of cityRules) {
         if (cpNum >= rule.start && cpNum <= rule.end) {
-          result.className = 'result normal';
-          result.innerHTML = `
-            <h2>✅ 正常地区</h2>
+          resultDiv.className = 'result normal';
+          resultDiv.innerHTML = `
+            <h2>✅ 正常派送区域</h2>
             <strong>邮编：</strong> ${cp}<br>
-            <strong>核心区域：</strong> ${rule.city}<br>
-            <strong>派送类型：</strong> 正常到门<br>
-            <strong>建议：</strong> 使用标准报价即可。
+            <strong>州：</strong> ${getState(cpNum)}<br>
+            <strong>城市：</strong> ${rule.city}<br>
+            <strong>派送类型：</strong> <span style="color:#10b981">正常到门派送</span><br>
+            <strong>建议：</strong> 使用标准报价即可，无需加收偏远费。
           `;
           return;
         }
       }
 
+      // 5. 按州常规判断
       for (const stateInfo of mexicoStates) {
         if (cpNum >= stateInfo.start && cpNum <= stateInfo.end) {
-          let typeText = '普通地区';
-          let advice = '建议正常报价。';
+          let typeText = '正常地区';
+          let advice = '使用标准报价即可。';
           let cssClass = 'normal';
 
           if (stateInfo.type === 'remote') {
             typeText = '偏远概率较高';
-            advice = '建议提前确认是否收取偏远费。';
+            advice = '建议确认是否收取偏远费。';
             cssClass = 'remote';
-          }
-
-          if (stateInfo.type === 'mixed') {
-            typeText = '部分区域偏远';
-            advice = '建议结合具体地址确认。';
+          } else if (stateInfo.type === 'mixed') {
+            typeText = '混合区域（部分偏远）';
+            advice = '建议结合具体 colonia 地址确认。';
             cssClass = 'unknown';
           }
 
-          result.className = `result ${cssClass}`;
-          result.innerHTML = `
+          resultDiv.className = `result ${cssClass}`;
+          resultDiv.innerHTML = `
             <h2>📍 邮编查询结果</h2>
             <strong>邮编：</strong> ${cp}<br>
-            <strong>所属州：</strong> ${stateInfo.state}<br>
+            <strong>州：</strong> ${stateInfo.state}<br>
+            <strong>城市/区域：</strong> ${getCity(cpNum)}<br>
             <strong>区域类型：</strong> ${typeText}<br>
             <strong>建议：</strong> ${advice}
           `;
@@ -364,12 +382,29 @@
         }
       }
 
-      result.className = 'result unknown';
-      result.innerHTML = `
-        <h2>ℹ 未识别邮编</h2>
+      // 未识别
+      resultDiv.className = 'result unknown';
+      resultDiv.innerHTML = `
+        <h2>ℹ️ 未识别邮编</h2>
         <strong>邮编：</strong> ${cp}<br>
-        当前系统无法识别该邮编，请人工确认。
+        当前系统无法识别该邮编，请人工确认或联系物流商。
       `;
+    }
+
+    // 获取州名称
+    function getState(cpNum) {
+      for (const s of mexicoStates) {
+        if (cpNum >= s.start && cpNum <= s.end) return s.state;
+      }
+      return '未知';
+    }
+
+    // 获取城市名称（默认返回空）
+    function getCity(cpNum) {
+      for (const rule of cityRules) {
+        if (cpNum >= rule.start && cpNum <= rule.end) return rule.city;
+      }
+      return '（具体城市请结合地址查看）';
     }
   </script>
 </body>
